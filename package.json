@@ -1,7 +1,7 @@
 {
   "name": "http-node",
   "version": "0.0.0",
-  "description": "Node's http as a standalone module",
+  "description": "Nodes http as a standalone package",
   "repository": {
     "type": "git",
     "url": "git://github.com/jscissr/http-node.git"
