@@ -1,0 +1,19 @@
+{
+  "name": "http-node",
+  "version": "0.0.0",
+  "description": "Node's http as a standalone module",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jscissr/http-node.git"
+  },
+  "main": "http.js",
+  "license": "MIT",
+  "dependencies": {
+    "freelist": "^1.0.1",
+    "http-parser-js": "^0.2.2"
+  },
+  "author": {
+    "name": "Jan Schär",
+    "email": "jscissr@gmail.com"
+  }
+}
