@@ -1,6 +1,6 @@
 {
   "name": "http-node",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Nodes http as a standalone package",
   "repository": {
     "type": "git",

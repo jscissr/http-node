@@ -1,5 +1,5 @@
 # http-node
-This module is a standalone package of Nodes http, Node.js v0.12.0. Unlike
+This module is a standalone package of Nodes http, Node.js v0.12.3. Unlike
 [http-browserify](https://www.npmjs.com/package/http-browserify), this is not
 a shim but the original code of Node, so it requires the `net` module. This is
 useful for having the Node core APIs on JS platforms other than Node, where
