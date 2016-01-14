@@ -1,7 +1,7 @@
 {
   "name": "http-node",
   "version": "0.0.2",
-  "description": "Nodes http as a standalone package",
+  "description": "Node.js http as a standalone package",
   "repository": {
     "type": "git",
     "url": "git://github.com/jscissr/http-node.git"
@@ -9,8 +9,8 @@
   "main": "http.js",
   "license": "MIT",
   "dependencies": {
-    "freelist": "^1.0.1",
-    "http-parser-js": "^0.3.0"
+    "freelist": "^1.0.3",
+    "http-parser-js": "^0.4.1"
   },
   "author": {
     "name": "Jan Schär",

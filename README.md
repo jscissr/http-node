@@ -1,5 +1,5 @@
 # http-node
-This module is a standalone package of Nodes http, Node.js v0.12.7. Unlike
+This module is a standalone package of http from Node.js v5.4.0. Unlike
 [http-browserify](https://www.npmjs.com/package/http-browserify), this is not
 a shim but the original code of Node, so it requires the `net` module. This is
 useful for having the Node core APIs on JS platforms other than Node, where
@@ -18,31 +18,13 @@ the command line API does not support changing builtins.
 Example:
 
 ```js
-var browserify = require('browserify');
+const browserify = require('browserify');
 
-var builtins = require('browserify/lib/builtins.js');
-builtins.http = require.resolve('http-node');
+const builtins = require('browserify/lib/builtins.js');
+var customBuiltins = Object.assign({}, builtins);
+customBuiltins.http = require.resolve('http-node');
 
-var b = browserify();
-
-b.add(...
-```
-
-The above example will use http-node for all browserify builds.
-If you only want it for a specific build of a larger build script:
-
-```js
-var browserify = require('browserify');
-
-var builtins = require('browserify/lib/builtins.js');
-var myBuiltins = {};
-Object.keys(builtins).forEach(function(key) {
-  myBuiltins[key] = builtins[key];
-});
-
-myBuiltins.http = require.resolve('http-node')
-
-var b = browserify({builtins: myBuiltins});
+var b = browserify({builtins: customBuiltins});
 
 b.add(...
 ```
@@ -50,18 +32,15 @@ b.add(...
 ## differences to original Node.js code
 
 - `require` calls of `_http_*` modules prefixed with `./`
-- uses [http-parser-js](https://www.npmjs.com/package/http-parser-js)
-- commented out calls to `DTRACE_HTTP_*` and `COUNTER_HTTP_*`
-- in older versions of stream module, `cork` was not available, fix for that in
-  `_http_outgoing.js`
+- `require('internal/util').deprecate` replaced by `require('util').deprecate`
+- uses [http-parser-js](https://github.com/creationix/http-parser-js)
+- commented out calls to `DTRACE_HTTP_*`, `LTTNG_HTTP_*` and `COUNTER_HTTP_*`
+- does not presume that sockets have a `_handle`
 
 ## credit
 
 The code is taken from the [Node.js](http://nodejs.org) project:
-Copyright Joyent, Inc. and other Node contributors.
-
-Node.js is a registered trademark of Joyent, Inc. in the United states and other countries. This
-package is not formally related to or endorsed by the official Joyent Node.js project.
+Copyright Node.js contributors. All rights reserved.
 
 ## license
 
