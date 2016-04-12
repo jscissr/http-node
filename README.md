@@ -1,5 +1,5 @@
 # http-node
-This module is a standalone package of [http](https://nodejs.org/api/http.html) from Node.js v5.4.1.
+This module is a standalone package of [http](https://nodejs.org/api/http.html) from Node.js v5.10.1.
 Unlike [http-browserify](https://github.com/substack/http-browserify), this is not a shim but the original code of Node.js, so it requires the `net` module.
 This is useful for having the Node.js core APIs on JavaScript platforms other than Node.js, where TCP sockets are available (which can be wrapped in a `net` module).
 One example of this is [Chrome Apps](https://developer.chrome.com/apps/sockets_tcp) with [chrome-net](https://github.com/feross/chrome-net).

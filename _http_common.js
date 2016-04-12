@@ -20,6 +20,7 @@ const kOnHeaders = HTTPParser.kOnHeaders | 0;
 const kOnHeadersComplete = HTTPParser.kOnHeadersComplete | 0;
 const kOnBody = HTTPParser.kOnBody | 0;
 const kOnMessageComplete = HTTPParser.kOnMessageComplete | 0;
+const kOnExecute = HTTPParser.kOnExecute | 0;
 
 // Only called in the slow case where slow means
 // that the request headers were either fragmented
@@ -75,6 +76,20 @@ function parserOnHeadersComplete(versionMajor, versionMinor, headers, method,
     // client only
     parser.incoming.statusCode = statusCode;
     parser.incoming.statusMessage = statusMessage;
+  }
+
+  // The client made non-upgrade request, and server is just advertising
+  // supported protocols.
+  //
+  // See RFC7230 Section 6.7
+  //
+  // NOTE: RegExp below matches `upgrade` in `Connection: abc, upgrade, def`
+  // header.
+  if (upgrade &&
+      parser.outgoing !== null &&
+      (parser.outgoing._headers.upgrade === undefined ||
+       !/(^|\W)upgrade(\W|$)/i.test(parser.outgoing._headers.connection))) {
+    upgrade = false;
   }
 
   parser.incoming.upgrade = upgrade;
@@ -142,6 +157,10 @@ var parsers = new FreeList('parsers', 1000, function() {
   parser._url = '';
   parser._consumed = false;
 
+  parser.socket = null;
+  parser.incoming = null;
+  parser.outgoing = null;
+
   // Only called in the slow case where slow means
   // that the request headers were either fragmented
   // across multiple TCP packets or too large to be
@@ -151,6 +170,7 @@ var parsers = new FreeList('parsers', 1000, function() {
   parser[kOnHeadersComplete] = parserOnHeadersComplete;
   parser[kOnBody] = parserOnBody;
   parser[kOnMessageComplete] = parserOnMessageComplete;
+  parser[kOnExecute] = null;
 
   return parser;
 });
@@ -175,6 +195,8 @@ function freeParser(parser, req, socket) {
       parser.socket.parser = null;
     parser.socket = null;
     parser.incoming = null;
+    parser.outgoing = null;
+    parser[kOnExecute] = null;
     if (parsers.free(parser) === false)
       parser.close();
     parser = null;
@@ -203,9 +225,72 @@ exports.httpSocketSetup = httpSocketSetup;
 /**
  * Verifies that the given val is a valid HTTP token
  * per the rules defined in RFC 7230
+ * See https://tools.ietf.org/html/rfc7230#section-3.2.6
+ *
+ * This implementation of checkIsHttpToken() loops over the string instead of
+ * using a regular expression since the former is up to 180% faster with v8 4.9
+ * depending on the string length (the shorter the string, the larger the
+ * performance difference)
  **/
-const token = /^[a-zA-Z0-9_!#$%&'*+.^`|~-]+$/;
 function checkIsHttpToken(val) {
-  return typeof val === 'string' && token.test(val);
+  if (typeof val !== 'string' || val.length === 0)
+    return false;
+
+  for (var i = 0, len = val.length; i < len; i++) {
+    var ch = val.charCodeAt(i);
+
+    if (ch >= 65 && ch <= 90) // A-Z
+      continue;
+
+    if (ch >= 97 && ch <= 122) // a-z
+      continue;
+
+    // ^ => 94
+    // _ => 95
+    // ` => 96
+    // | => 124
+    // ~ => 126
+    if (ch === 94 || ch === 95 || ch === 96 || ch === 124 || ch === 126)
+      continue;
+
+    if (ch >= 48 && ch <= 57) // 0-9
+      continue;
+
+    // ! => 33
+    // # => 35
+    // $ => 36
+    // % => 37
+    // & => 38
+    // ' => 39
+    // * => 42
+    // + => 43
+    // - => 45
+    // . => 46
+    if (ch >= 33 && ch <= 46) {
+      if (ch === 34 || ch === 40 || ch === 41 || ch === 44)
+        return false;
+      continue;
+    }
+
+    return false;
+  }
+  return true;
 }
 exports._checkIsHttpToken = checkIsHttpToken;
+
+/**
+ * True if val contains an invalid field-vchar
+ *  field-value    = *( field-content / obs-fold )
+ *  field-content  = field-vchar [ 1*( SP / HTAB ) field-vchar ]
+ *  field-vchar    = VCHAR / obs-text
+ **/
+function checkInvalidHeaderChar(val) {
+  val = '' + val;
+  for (var i = 0; i < val.length; i++) {
+    const ch = val.charCodeAt(i);
+    if (ch === 9) continue;
+    if (ch <= 31 || ch > 255 || ch === 127) return true;
+  }
+  return false;
+}
+exports._checkInvalidHeaderChar = checkInvalidHeaderChar;
