@@ -50,10 +50,10 @@ function ClientRequest(options, cb) {
     // well, and b) possibly too restrictive for real-world usage. That's
     // why it only scans for spaces because those are guaranteed to create
     // an invalid request.
-    throw new TypeError('Request path contains unescaped characters.');
+    throw new TypeError('Request path contains unescaped characters');
   } else if (protocol !== expectedProtocol) {
     throw new Error('Protocol "' + protocol + '" not supported. ' +
-                    'Expected "' + expectedProtocol + '".');
+                    'Expected "' + expectedProtocol + '"');
   }
 
   const defaultPort = options.defaultPort ||
@@ -108,7 +108,7 @@ function ClientRequest(options, cb) {
   if (options.auth && !this.getHeader('Authorization')) {
     //basic auth
     this.setHeader('Authorization', 'Basic ' +
-                   new Buffer(options.auth).toString('base64'));
+                   Buffer.from(options.auth).toString('base64'));
   }
 
   if (method === 'GET' ||
@@ -195,6 +195,8 @@ function ClientRequest(options, cb) {
     self._flush();
     self = null;
   });
+
+  this._ended = false;
 }
 
 util.inherits(ClientRequest, OutgoingMessage);
@@ -432,7 +434,7 @@ function parserOnIncomingClient(res, shouldKeepAlive) {
   // Responses to CONNECT request is handled as Upgrade.
   if (req.method === 'CONNECT') {
     res.upgrade = true;
-    return true; // skip body
+    return 2; // skip body, and the rest
   }
 
   // Responses to HEAD requests are crazy.
@@ -466,6 +468,7 @@ function parserOnIncomingClient(res, shouldKeepAlive) {
 
   // add our listener first, so that we guarantee socket cleanup
   res.on('end', responseOnEnd);
+  req.on('prefinish', requestOnPrefinish);
   var handled = req.emit('response', res);
 
   // If the user did not listen for the 'response' event, then they
@@ -478,9 +481,7 @@ function parserOnIncomingClient(res, shouldKeepAlive) {
 }
 
 // client
-function responseOnEnd() {
-  var res = this;
-  var req = res.req;
+function responseKeepAlive(res, req) {
   var socket = req.socket;
 
   if (!req.shouldKeepAlive) {
@@ -502,6 +503,26 @@ function responseOnEnd() {
     // handlers have a chance to run.
     process.nextTick(emitFreeNT, socket);
   }
+}
+
+function responseOnEnd() {
+  const res = this;
+  const req = this.req;
+
+  req._ended = true;
+  if (!req.shouldKeepAlive || req.finished)
+    responseKeepAlive(res, req);
+}
+
+function requestOnPrefinish() {
+  const req = this;
+  const res = this.res;
+
+  if (!req.shouldKeepAlive)
+    return;
+
+  if (req._ended)
+    responseKeepAlive(res, req);
 }
 
 function emitFreeNT(socket) {

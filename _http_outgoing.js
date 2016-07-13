@@ -339,9 +339,9 @@ OutgoingMessage.prototype.setHeader = function(name, value) {
     throw new TypeError(
       'Header name must be a valid HTTP Token ["' + name + '"]');
   if (typeof name !== 'string')
-    throw new TypeError('`name` should be a string in setHeader(name, value).');
+    throw new TypeError('"name" should be a string in setHeader(name, value)');
   if (value === undefined)
-    throw new Error('`value` required in setHeader("' + name + '", value).');
+    throw new Error('"value" required in setHeader("' + name + '", value)');
   if (this._header)
     throw new Error('Can\'t set headers after they are sent.');
   if (common._checkInvalidHeaderChar(value) === true) {
@@ -361,7 +361,7 @@ OutgoingMessage.prototype.setHeader = function(name, value) {
 
 OutgoingMessage.prototype.getHeader = function(name) {
   if (arguments.length < 1) {
-    throw new Error('`name` is required for getHeader(name).');
+    throw new Error('"name" argument is required for getHeader(name)');
   }
 
   if (!this._headers) return;
@@ -373,11 +373,11 @@ OutgoingMessage.prototype.getHeader = function(name) {
 
 OutgoingMessage.prototype.removeHeader = function(name) {
   if (arguments.length < 1) {
-    throw new Error('`name` is required for removeHeader(name).');
+    throw new Error('"name" argument is required for removeHeader(name)');
   }
 
   if (this._header) {
-    throw new Error('Can\'t remove headers after they are sent.');
+    throw new Error('Can\'t remove headers after they are sent');
   }
 
   var key = name.toLowerCase();
@@ -396,7 +396,7 @@ OutgoingMessage.prototype.removeHeader = function(name) {
 
 OutgoingMessage.prototype._renderHeaders = function() {
   if (this._header) {
-    throw new Error('Can\'t render headers after they are sent to the client.');
+    throw new Error('Can\'t render headers after they are sent to the client');
   }
 
   var headersMap = this._headers;
@@ -440,7 +440,7 @@ OutgoingMessage.prototype.write = function(chunk, encoding, callback) {
   }
 
   if (typeof chunk !== 'string' && !(chunk instanceof Buffer)) {
-    throw new TypeError('first argument must be a string or Buffer');
+    throw new TypeError('First argument must be a string or Buffer');
   }
 
 
@@ -526,7 +526,7 @@ OutgoingMessage.prototype.addTrailers = function(headers) {
 };
 
 
-const crlf_buf = new Buffer('\r\n');
+const crlf_buf = Buffer.from('\r\n');
 
 
 OutgoingMessage.prototype.end = function(data, encoding, callback) {
@@ -539,20 +539,12 @@ OutgoingMessage.prototype.end = function(data, encoding, callback) {
   }
 
   if (data && typeof data !== 'string' && !(data instanceof Buffer)) {
-    throw new TypeError('first argument must be a string or Buffer');
+    throw new TypeError('First argument must be a string or Buffer');
   }
 
   if (this.finished) {
     return false;
   }
-
-  var self = this;
-  function finish() {
-    self.emit('finish');
-  }
-
-  if (typeof callback === 'function')
-    this.once('finish', callback);
 
   if (!this._header) {
     if (data) {
@@ -580,6 +572,13 @@ OutgoingMessage.prototype.end = function(data, encoding, callback) {
     // Normal body write.
     this.write(data, encoding);
   }
+
+  if (typeof callback === 'function')
+    this.once('finish', callback);
+
+  const finish = () => {
+    this.emit('finish');
+  };
 
   if (this._hasBody && this.chunkedEncoding) {
     ret = this._send('0\r\n' + this._trailer + '\r\n', 'binary', finish);

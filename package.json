@@ -10,7 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "freelist": "^1.0.3",
-    "http-parser-js": "^0.4.1"
+    "http-parser-js": "^0.4.3"
   },
   "author": {
     "name": "Jan Schär",
