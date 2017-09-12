@@ -6,7 +6,7 @@
     "type": "git",
     "url": "git://github.com/jscissr/http-node.git"
   },
-  "main": "http.js",
+  "main": "index.js",
   "license": "MIT",
   "dependencies": {
     "freelist": "^1.0.3",
