@@ -1,10 +1,10 @@
 {
-  "name": "http-node",
+  "name": "@webtorrent/http-node",
   "version": "1.2.0",
   "description": "Node.js http as a standalone package",
   "repository": {
     "type": "git",
-    "url": "git://github.com/jscissr/http-node.git"
+    "url": "git://github.com/webtorrent/http-node.git"
   },
   "main": "http.js",
   "license": "MIT",
@@ -18,5 +18,11 @@
   "author": {
     "name": "Jan Schär",
     "email": "jscissr@gmail.com"
+  },
+  "devDependencies": {
+    "semantic-release": "^18.0.1"
+  },
+  "release": {
+    "extends": "@webtorrent/semantic-release-config"
   }
 }
